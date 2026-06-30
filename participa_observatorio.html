@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Participa — Observatorio de Género del Atlántico</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --purple:#6B3FA0; --pd:#4A2970; --pl:#EDE4F7;
+  --pink:#F391B9; --teal:#3DBDA0;
+  --white:#fff; --gl:#F8F6FC; --gt:#666; --td:#1A1A2E;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Open Sans',sans-serif;color:var(--td);background:var(--gl);}
+
+.wrap{max-width:1000px;margin:0 auto;padding:40px 20px 60px;}
+
+.page-hero{background:linear-gradient(135deg,#2D1558,var(--purple));border-radius:20px;padding:48px 40px;text-align:center;margin-bottom:36px;}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(243,145,185,.18);border:1px solid rgba(243,145,185,.35);border-radius:20px;padding:5px 14px;font-size:10px;color:var(--pink);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;}
+.page-hero h1{font-family:'Poppins',sans-serif;font-weight:800;font-size:28px;color:white;line-height:1.25;margin-bottom:10px;}
+.page-hero p{font-size:14px;color:rgba(255,255,255,.78);max-width:560px;margin:0 auto;line-height:1.6;}
+
+.tabs-bar{display:flex;justify-content:center;gap:8px;margin-bottom:32px;}
+.tab-btn{padding:13px 28px;font-family:'Poppins',sans-serif;font-weight:600;font-size:13px;color:var(--gt);background:white;border:1.5px solid rgba(107,63,160,.15);border-radius:30px;cursor:pointer;transition:all .2s;}
+.tab-btn.active{background:var(--purple);color:white;border-color:var(--purple);}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+.grid2{display:grid;grid-template-columns:1fr 1.4fr;gap:32px;align-items:start;}
+@media (max-width:760px){ .grid2{grid-template-columns:1fr;} }
+
+.sidebar-card{background:var(--pl);border-radius:16px;padding:28px 24px;}
+.sidebar-card h3{font-family:'Poppins',sans-serif;font-weight:700;font-size:16px;color:var(--pd);margin-bottom:10px;}
+.sidebar-card p{font-size:13px;color:#5A3A80;line-height:1.7;margin-bottom:18px;}
+.sidebar-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+.sidebar-list li{display:flex;gap:10px;font-size:12px;color:#5A3A80;line-height:1.6;}
+.sidebar-list li::before{content:'✓';background:var(--teal);color:white;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.sidebar-stat{background:white;border-radius:12px;padding:18px;text-align:center;}
+.sidebar-stat-num{font-family:'Poppins',sans-serif;font-weight:800;font-size:30px;color:var(--purple);line-height:1;margin-bottom:4px;}
+.sidebar-stat-lbl{font-size:11px;color:var(--gt);}
+
+.form-card{background:white;border-radius:20px;padding:32px;box-shadow:0 4px 24px rgba(107,63,160,.1);border:1px solid rgba(107,63,160,.08);}
+.form-title{font-family:'Poppins',sans-serif;font-weight:700;font-size:19px;color:var(--td);margin-bottom:6px;}
+.form-sub{font-size:13px;color:var(--gt);margin-bottom:24px;line-height:1.6;}
+
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:11.5px;font-weight:700;color:var(--pd);margin-bottom:6px;letter-spacing:.3px;text-transform:uppercase;}
+.field label span{color:#C0392B;margin-left:2px;}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;border:1.5px solid rgba(107,63,160,.2);border-radius:10px;font-family:'Open Sans',sans-serif;font-size:14px;color:var(--td);background:white;outline:none;appearance:none;transition:border-color .2s,box-shadow .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(107,63,160,.08);}
+.field textarea{resize:vertical;min-height:90px;line-height:1.6;}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B3FA0' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:520px){ .field-row{grid-template-columns:1fr;} }
+.field-hint{font-size:11px;color:#aaa;margin-top:5px;}
+
+.checks-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:4px;}
+@media (max-width:520px){ .checks-grid{grid-template-columns:1fr;} }
+.check-item{display:flex;align-items:center;gap:9px;padding:10px 13px;border:1.5px solid rgba(107,63,160,.18);border-radius:10px;cursor:pointer;transition:all .2s;font-size:12.5px;}
+.check-item:hover{border-color:var(--purple);background:var(--pl);}
+.check-item input{width:15px;height:15px;accent-color:var(--purple);flex-shrink:0;}
+
+.btn-submit{width:100%;padding:14px;background:var(--purple);color:white;font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;border:none;border-radius:12px;cursor:pointer;transition:background .2s;margin-top:6px;}
+.btn-submit:hover{background:var(--pd);}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed;}
+
+.success-msg{display:none;text-align:center;padding:36px 16px;}
+.success-icon{width:56px;height:56px;border-radius:50%;background:var(--teal);color:white;font-size:26px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.success-title{font-family:'Poppins',sans-serif;font-weight:700;font-size:19px;color:var(--td);margin-bottom:8px;}
+.success-text{font-size:13.5px;color:var(--gt);line-height:1.7;}
+
+.hidden-field{display:none;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="page-hero">
+    <div class="eyebrow">Tu voz importa</div>
+    <h1>Participa y construye con nosotras</h1>
+    <p>Regístrate para futuros programas o cuéntanos qué necesita tu municipio.</p>
+  </div>
+
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="showTab('registro',this)">Quiero registrarme</button>
+    <button class="tab-btn" onclick="showTab('propuesta',this)">Tengo una propuesta</button>
+  </div>
+
+  <!-- ══════════ TAB 1: REGISTRO ══════════ -->
+  <div id="tab-registro" class="tab-panel active">
+    <div class="grid2">
+      <div>
+        <div class="sidebar-card">
+          <h3>¿Para qué sirve este registro?</h3>
+          <p>La Secretaría usa esta base de datos para convocarte directamente cuando haya programas disponibles en tu municipio.</p>
+          <ul class="sidebar-list">
+            <li>Te avisamos cuando abran inscripciones</li>
+            <li>Tu perfil ayuda a diseñar programas más pertinentes</li>
+            <li>Información confidencial — solo uso institucional</li>
+          </ul>
+        </div>
+      </div>
+
+      <div>
+        <div class="form-card" id="card-registro">
+          <div class="form-title">Registro de participantes</div>
+          <div class="form-sub">Completa tus datos para que la Secretaría te contacte cuando haya programas disponibles en tu municipio.</div>
+
+          <form id="form-registro">
+            <div class="field-row">
+              <div class="field">
+                <label>Nombre <span>*</span></label>
+                <input type="text" id="reg-nombre" required placeholder="Tu nombre">
+              </div>
+              <div class="field">
+                <label>Apellidos <span>*</span></label>
+                <input type="text" id="reg-apellidos" required placeholder="Tus apellidos">
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Cédula <span>*</span></label>
+                <input type="text" id="reg-cedula" required placeholder="Número de cédula">
+              </div>
+              <div class="field">
+                <label>Celular <span>*</span></label>
+                <input type="tel" id="reg-celular" required placeholder="300 000 0000">
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Municipio <span>*</span></label>
+                <select id="reg-municipio" required>
+                  <option value="">Selecciona</option>
+                  <option>Barranquilla</option><option>Soledad</option><option>Malambo</option>
+                  <option>Baranoa</option><option>Galapa</option><option>Juan de Acosta</option>
+                  <option>Candelaria</option><option>Manatí</option><option>Polonuevo</option>
+                  <option>Repelón</option><option>Suán</option><option>Puerto Colombia</option>
+                  <option>Palmar de Varela</option><option>Luruaco</option><option>Usiacurí</option>
+                  <option>Sabanalarga</option><option>Ponedera</option><option>Campo de la Cruz</option>
+                  <option>Piojó</option><option>Tubará</option><option>Santa Lucía</option>
+                  <option>Sabanagrande</option><option>Santo Tomás</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Correo electrónico <span>*</span></label>
+                <input type="email" id="reg-correo" required placeholder="tucorreo@email.com">
+                <div class="field-hint">Necesario para procesar el registro</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Programa de interés <span>*</span></label>
+              <select id="reg-programa" required>
+                <option value="">Selecciona</option>
+                <option>Soy Mujer que Brilla (Emprendimiento)</option>
+                <option>RENA-SER (Apoyo psicosocial)</option>
+                <option>MACHO+ (Para hombres)</option>
+                <option>Ellas Deciden (Liderazgo político)</option>
+                <option>Redes de Sororidad (Prevención VBG)</option>
+                <option>Postea con Propósito (Digital y STEM+)</option>
+                <option>Sin Pelos en la Lengua (Derechos)</option>
+                <option>Cualquier programa disponible</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>¿Hay algo que debamos saber para apoyarte mejor?</label>
+              <textarea id="reg-info" placeholder="Ejemplo: soy mujer rural, tengo hijos pequeños, soy víctima del conflicto... (opcional)"></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btn-registro">Enviar mi registro</button>
+          </form>
+
+          <div class="success-msg" id="success-registro">
+            <div class="success-icon">✓</div>
+            <div class="success-title">¡Registro exitoso!</div>
+            <div class="success-text">Tu información quedó registrada. La Secretaría de la Mujer te contactará cuando haya programas disponibles en tu municipio.<br><br>Gracias por ser parte del cambio.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ TAB 2: PROPUESTA ══════════ -->
+  <div id="tab-propuesta" class="tab-panel">
+    <div class="grid2">
+      <div>
+        <div class="sidebar-card">
+          <h3>¿Qué pasa con tu propuesta?</h3>
+          <p>Cada idea es revisada por el equipo de la Secretaría. Las propuestas más frecuentes se convierten en nuevos programas.</p>
+          <ul class="sidebar-list">
+            <li>Tu propuesta llega directamente a la Secretaría</li>
+            <li>Las ideas más solicitadas se priorizan</li>
+            <li>Puedes enviarla de forma anónima</li>
+          </ul>
+          <div class="sidebar-stat">
+            <div class="sidebar-stat-num">22</div>
+            <div class="sidebar-stat-lbl">municipios esperan tus ideas</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="form-card" id="card-propuesta">
+          <div class="form-title">Cuéntanos qué necesitas</div>
+          <div class="form-sub">¿Qué programa o curso crees que la Secretaría debería implementar? Tu opinión construye la política pública.</div>
+
+          <form id="form-propuesta">
+            <div class="field">
+              <label>Tipo de propuesta <span>*</span></label>
+              <select id="prop-tipo" required>
+                <option value="">Selecciona</option>
+                <option>Nuevo curso o capacitación</option>
+                <option>Nuevo programa</option>
+                <option>Mejora a programa existente</option>
+                <option>Atención a una problemática</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Eje al que se relaciona</label>
+              <select id="prop-eje">
+                <option value="">Selecciona (opcional)</option>
+                <option>Cultura libre de sexismo e institucionalidad</option>
+                <option>Una vida libre de violencias con salud plena</option>
+                <option>Autonomía económica y trabajo digno</option>
+                <option>Democracia paritaria y construcción de paz</option>
+                <option>Hábitat y vivienda digna</option>
+                <option>Educación de calidad y acceso a la tecnología</option>
+                <option>No sé a cuál pertenece</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Describe tu propuesta <span>*</span></label>
+              <textarea id="prop-desc" required style="min-height:120px;" placeholder="¿Qué problema resuelve? ¿A quiénes beneficiaría? ¿Dónde debería realizarse?"></textarea>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Municipio</label>
+                <select id="prop-municipio">
+                  <option value="">En todo el departamento</option>
+                  <option>Barranquilla</option><option>Soledad</option><option>Malambo</option>
+                  <option>Baranoa</option><option>Galapa</option><option>Juan de Acosta</option>
+                  <option>Candelaria</option><option>Manatí</option><option>Polonuevo</option>
+                  <option>Repelón</option><option>Suán</option><option>Puerto Colombia</option>
+                  <option>Palmar de Varela</option><option>Luruaco</option><option>Usiacurí</option>
+                  <option>Sabanalarga</option><option>Ponedera</option><option>Campo de la Cruz</option>
+                  <option>Piojó</option><option>Tubará</option><option>Santa Lucía</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Tu nombre (opcional)</label>
+                <input type="text" id="prop-nombre" placeholder="Puedes dejarlo en blanco">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btn-propuesta">Enviar mi propuesta</button>
+          </form>
+
+          <div class="success-msg" id="success-propuesta">
+            <div class="success-icon">✓</div>
+            <div class="success-title">¡Propuesta recibida!</div>
+            <div class="success-text">Tu idea llegó a la Secretaría de la Mujer del Atlántico. Las propuestas más frecuentes se convierten en nuevos programas.<br><br>Gracias por construir con nosotras.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Iframe oculto para enviar el formulario sin redirigir al usuario a Google -->
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+<script>
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+const FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSeolZhv4S8QAAtwfM-eO6GQbFYC2c-vPvUD_E12QFdsxSB96g/formResponse';
+
+// Mapeo de entry IDs de tu Google Form
+const ENTRY = {
+  email:       'entry.1098606337', // usado como Correo/Email general
+  nombre:      'entry.141289102',
+  apellidos:   'entry.2104356273',
+  cedula:      'entry.2021770306',
+  celular:     'entry.2050946412',
+  municipio:   'entry.612931849',
+  correo:      'entry.482435869',
+  programa:    'entry.1530733007',
+  info:        'entry.216357857',
+  tipoForm:    'entry.358488058',
+  tipoProp:    'entry.740032404'
+};
+
+function enviarAGoogleForms(dataObj) {
+  return new Promise((resolve) => {
+    const form = document.createElement('form');
+    form.action = FORM_ACTION;
+    form.method = 'POST';
+    form.target = 'hidden_iframe';
+    form.style.display = 'none';
+
+    Object.keys(dataObj).forEach(key => {
+      if (dataObj[key] !== undefined && dataObj[key] !== null) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = dataObj[key];
+        form.appendChild(input);
+      }
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(() => {
+      document.body.removeChild(form);
+      resolve();
+    }, 600);
+  });
+}
+
+// ───────── FORMULARIO 1: REGISTRO ─────────
+document.getElementById('form-registro').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-registro');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const nombre = document.getElementById('reg-nombre').value;
+  const apellidos = document.getElementById('reg-apellidos').value;
+  const cedula = document.getElementById('reg-cedula').value;
+  const celular = document.getElementById('reg-celular').value;
+  const municipio = document.getElementById('reg-municipio').value;
+  const correo = document.getElementById('reg-correo').value;
+  const programa = document.getElementById('reg-programa').value;
+  const info = document.getElementById('reg-info').value;
+
+  const payload = {};
+  payload[ENTRY.email] = correo;
+  payload[ENTRY.nombre] = nombre;
+  payload[ENTRY.apellidos] = apellidos;
+  payload[ENTRY.cedula] = cedula;
+  payload[ENTRY.celular] = celular;
+  payload[ENTRY.municipio] = municipio;
+  payload[ENTRY.correo] = correo;
+  payload[ENTRY.programa] = programa;
+  payload[ENTRY.info] = info;
+  payload[ENTRY.tipoForm] = 'Registro';
+
+  await enviarAGoogleForms(payload);
+
+  document.getElementById('card-registro').querySelector('.form-title').style.display = 'none';
+  document.getElementById('card-registro').querySelector('.form-sub').style.display = 'none';
+  document.getElementById('form-registro').style.display = 'none';
+  document.getElementById('success-registro').style.display = 'block';
+});
+
+// ───────── FORMULARIO 2: PROPUESTA ─────────
+document.getElementById('form-propuesta').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-propuesta');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const tipo = document.getElementById('prop-tipo').value;
+  const eje = document.getElementById('prop-eje').value;
+  const desc = document.getElementById('prop-desc').value;
+  const municipio = document.getElementById('prop-municipio').value;
+  const nombre = document.getElementById('prop-nombre').value;
+
+  const infoCombinada = 'Eje: ' + (eje || 'No especificado') + ' | Municipio: ' + (municipio || 'Departamento') + (nombre ? (' | Nombre: ' + nombre) : ' | Anónimo');
+
+  const payload = {};
+  payload[ENTRY.tipoForm] = 'Propuesta';
+  payload[ENTRY.tipoProp] = tipo;
+  payload[ENTRY.info] = desc;
+  payload[ENTRY.municipio] = municipio || 'Departamento completo';
+  payload[ENTRY.nombre] = nombre || 'Anónimo';
+  payload[ENTRY.correo] = '';
+  payload[ENTRY.email] = infoCombinada;
+
+  await enviarAGoogleForms(payload);
+
+  document.getElementById('card-propuesta').querySelector('.form-title').style.display = 'none';
+  document.getElementById('card-propuesta').querySelector('.form-sub').style.display = 'none';
+  document.getElementById('form-propuesta').style.display = 'none';
+  document.getElementById('success-propuesta').style.display = 'block';
+});
+</script>
+
+</body>
+</html>
