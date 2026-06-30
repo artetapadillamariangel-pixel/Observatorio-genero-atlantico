@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Representación Política Femenina — Atlántico</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+:root {
+  --pink-1: #FCE9F1;
+  --pink-2: #F8C9DD;
+  --pink-3: #F391B9;
+  --pink-4: #C24B7E;
+  --pink-dark: #8E2F58;
+  --purple: #6B3FA0;
+  --text-dark: #2B1A3D;
+  --gray: #6B6B7B;
+  --bg: #FAF8FB;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+}
+.map-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 28px rgba(107,63,160,0.10);
+  border: 1px solid rgba(107,63,160,0.08);
+  padding: 28px 24px 24px;
+  overflow: hidden;
+}
+.map-header {
+  text-align: center;
+  margin-bottom: 6px;
+}
+.map-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: 0.2px;
+}
+.map-subtitle {
+  font-size: 12.5px;
+  color: var(--gray);
+  margin-top: 4px;
+}
+.map-controls {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 5;
+}
+.map-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid rgba(107,63,160,0.15);
+  color: var(--pink-dark);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  transition: background .15s, transform .15s;
+  user-select: none;
+}
+.map-btn:hover { background: var(--pink-1); transform: translateY(-1px); }
+.map-btn:active { transform: translateY(0); }
+
+#mapa-svg-container {
+  width: 100%;
+  cursor: grab;
+}
+#mapa-svg-container:active { cursor: grabbing; }
+
+.municipio-path {
+  stroke: #ffffff;
+  stroke-width: 1.1px;
+  transition: filter 0.18s ease, stroke-width 0.18s ease;
+  cursor: pointer;
+}
+.municipio-path:hover {
+  filter: brightness(0.92);
+  stroke: var(--pink-dark);
+  stroke-width: 2px;
+}
+.municipio-sin-dato {
+  fill: #ECE9F0 !important;
+  stroke: #ffffff;
+}
+
+.muni-label {
+  font-size: 7.6px;
+  font-weight: 600;
+  fill: var(--text-dark);
+  pointer-events: none;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 2.6px;
+  stroke-linejoin: round;
+  opacity: 0.92;
+}
+.muni-label-bquilla {
+  font-size: 8.6px;
+  font-weight: 700;
+}
+
+.star-icon {
+  pointer-events: none;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(43,26,61,0.18);
+  border: 1px solid rgba(107,63,160,0.10);
+  padding: 14px 16px;
+  min-width: 210px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 50;
+}
+.tooltip.visible { opacity: 1; transform: translateY(0); }
+.tooltip-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tooltip-title .tt-star { color: var(--pink-4); font-size: 12px; }
+.tooltip-divider {
+  height: 1px;
+  background: rgba(107,63,160,0.10);
+  margin: 8px 0;
+}
+.tooltip-section-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12.5px;
+  color: var(--text-dark);
+  margin-bottom: 3px;
+}
+.tooltip-row .val {
+  font-weight: 700;
+  color: var(--pink-dark);
+}
+.tooltip-alcaldia {
+  font-size: 12.5px;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+.tooltip-leadership {
+  margin-top: 8px;
+  background: var(--pink-1);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--pink-dark);
+  font-weight: 600;
+  line-height: 1.35;
+}
+.tooltip-nodata {
+  font-size: 11.5px;
+  color: var(--gray);
+  font-style: italic;
+}
+
+/* Leyenda */
+.legend-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 14px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(107,63,160,0.08);
+}
+.legend-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  width: 100%;
+  text-align: center;
+  margin-bottom: 2px;
+}
+.legend-scale {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--gray);
+}
+.legend-swatch {
+  width: 14px; height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.legend-star-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--gray);
+  padding-left: 14px;
+  border-left: 1px solid rgba(107,63,160,0.12);
+}
+.legend-star-icon { color: var(--pink-4); font-size: 13px; }
+
+@media (max-width: 640px) {
+  .map-wrap { padding: 18px 14px 16px; border-radius: 14px; }
+  .map-title { font-size: 15px; }
+  .map-subtitle { font-size: 11px; }
+  .muni-label { font-size: 6.4px; }
+  .muni-label-bquilla { font-size: 7.4px; }
+  .legend-scale { gap: 10px; }
+  .legend-item { font-size: 9.5px; }
+  .legend-star-item { font-size: 9.5px; padding-left: 10px; }
+  .tooltip { min-width: 180px; padding: 11px 13px; }
+}
+</style>
+</head>
+<body>
+
+<div class="map-wrap">
+  <div class="map-header">
+    <div class="map-title">Representación política de las mujeres en el Atlántico</div>
+    <div class="map-subtitle">Participación femenina en los Concejos Municipales · Elecciones territoriales 2023</div>
+  </div>
+
+  <div class="map-controls">
+    <div class="map-btn" id="zoom-in" title="Acercar">+</div>
+    <div class="map-btn" id="zoom-out" title="Alejar">−</div>
+    <div class="map-btn" id="zoom-reset" title="Restablecer">⤾</div>
+  </div>
+
+  <div id="mapa-svg-container"></div>
+
+  <div class="legend-wrap">
+    <div class="legend-title">Representación política de las mujeres en el Concejo</div>
+    <div class="legend-scale">
+      <div class="legend-item"><span class="legend-swatch" style="background:#FCE9F1;"></span>Menos del 20%</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#F8C9DD;"></span>20% – 29%</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#F391B9;"></span>30% – 39%</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:#C24B7E;"></span>40% o más</div>
+      <div class="legend-star-item"><span class="legend-star-icon">★</span>Municipio con alcaldesa</div>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+
+const DATOS_MUNICIPIOS = {
+  "Barranquilla": { pct: null, alcaldesa: false, curules_m: null, curules_t: null },
+  "Usiacurí": { pct: 44, alcaldesa: false, curules_m: 4, curules_t: 9 },
+  "Malambo": { pct: 44, alcaldesa: true, curules_m: 7, curules_t: 16 },
+  "Luruaco": { pct: 42, alcaldesa: false, curules_m: 5, curules_t: 12 },
+  "Polonuevo": { pct: 40, alcaldesa: false, curules_m: 4, curules_t: 10 },
+  "Santo Tomás": { pct: 38, alcaldesa: true, curules_m: 5, curules_t: 13 },
+  "Puerto Colombia": { pct: 33, alcaldesa: false, curules_m: 4, curules_t: 12 },
+  "Suan": { pct: 33, alcaldesa: true, curules_m: 3, curules_t: 9 },
+  "Tubará": { pct: 30, alcaldesa: false, curules_m: 3, curules_t: 10 },
+  "Campo De La Cruz": { pct: 30, alcaldesa: true, curules_m: 3, curules_t: 10 },
+  "Candelaria": { pct: 30, alcaldesa: false, curules_m: 3, curules_t: 10 },
+  "Manatí": { pct: 27, alcaldesa: true, curules_m: 3, curules_t: 11 },
+  "Piojó": { pct: 25, alcaldesa: false, curules_m: 2, curules_t: 8 },
+  "Repelón": { pct: 25, alcaldesa: false, curules_m: 3, curules_t: 12 },
+  "Sabanagrande": { pct: 23, alcaldesa: false, curules_m: 3, curules_t: 13 },
+  "Soledad": { pct: 22, alcaldesa: true, curules_m: 4, curules_t: 18 },
+  "Santa Lucía": { pct: 20, alcaldesa: false, curules_m: 2, curules_t: 10 },
+  "Sabanalarga": { pct: 20, alcaldesa: false, curules_m: 3, curules_t: 15 },
+  "Juan De Acosta": { pct: 18, alcaldesa: false, curules_m: 2, curules_t: 11 },
+  "Palmar De Varela": { pct: 17, alcaldesa: false, curules_m: 2, curules_t: 12 },
+  "Galapa": { pct: 15, alcaldesa: false, curules_m: 2, curules_t: 13 },
+  "Baranoa": { pct: 13, alcaldesa: false, curules_m: 2, curules_t: 15 },
+  "Ponedera": { pct: 9, alcaldesa: false, curules_m: 1, curules_t: 11 }
+};
+
+
+const GEO_DATA = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"municipio":"Barranquilla","codigo_dane":"08001","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.75673347428092,10.945304658250349],[-74.82651010259437,10.914317921525276],[-74.91832145563838,10.945304658250349],[-74.87425200617726,10.987446620196447],[-74.87425200617726,11.048180624177588],[-74.8522172814467,11.10519621975172],[-74.84364822182926,11.066772666212632],[-74.76407838252443,10.994883437010463],[-74.75673347428092,10.945304658250349]]]}},{"type":"Feature","properties":{"municipio":"Baranoa","codigo_dane":"08078","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.94525278586462,10.858541795420146],[-74.87180370342942,10.853583917544135],[-74.87914861167293,10.812681425067039],[-74.87547615755118,10.725918562236838],[-74.93301127212543,10.711044928608803],[-74.93423542349935,10.770539463120942],[-74.98442562983007,10.790370974624988],[-74.99421884082143,10.815160364005045],[-74.94525278586462,10.858541795420146]]]}},{"type":"Feature","properties":{"municipio":"Campo De La Cruz","codigo_dane":"08137","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.80692368061165,10.482982546312272],[-74.81182028610732,10.450756340118197],[-74.86323464381198,10.366472416226001],[-74.86813124930765,10.34044355737694],[-74.91709730426446,10.337964618438935],[-74.96239090509951,10.382585519323039],[-74.91709730426446,10.412332786579109],[-74.8522172814467,10.428445889676146],[-74.82038934572476,10.494137771533298],[-74.80692368061165,10.482982546312272]]]}},{"type":"Feature","properties":{"municipio":"Candelaria","codigo_dane":"08141","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.85588973556845,10.564787531266463],[-74.82038934572476,10.494137771533298],[-74.8522172814467,10.428445889676146],[-74.91709730426446,10.412332786579109],[-74.92321806113407,10.53380079454139],[-74.85588973556845,10.564787531266463]]]}},{"type":"Feature","properties":{"municipio":"Galapa","codigo_dane":"08296","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.82651010259437,10.914317921525276],[-74.83875161633357,10.88581012373821],[-74.87180370342942,10.853583917544135],[-74.94525278586462,10.858541795420146],[-74.91832145563838,10.945304658250349],[-74.82651010259437,10.914317921525276]]]}},{"type":"Feature","properties":{"municipio":"Juan De Acosta","codigo_dane":"08372","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-75.07378868012624,10.88581012373821],[-74.99421884082143,10.815160364005045],[-74.98442562983007,10.790370974624988],[-75.03828829028257,10.770539463120942],[-75.14601361118754,10.811441955598037],[-75.21701439087491,10.805244608253023],[-75.07378868012624,10.88581012373821]]]}},{"type":"Feature","properties":{"municipio":"Luruaco","codigo_dane":"08421","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-75.06277131776096,10.685016069759742],[-75.06032301501313,10.594534798522531],[-75.22558345049235,10.559829653390452],[-75.24761817522291,10.696171294980768],[-75.06277131776096,10.685016069759742]]]}},{"type":"Feature","properties":{"municipio":"Malambo","codigo_dane":"08433","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.73837120367212,10.875894367986186],[-74.74081950641995,10.834991875509091],[-74.80814783198556,10.812681425067039],[-74.87914861167293,10.812681425067039],[-74.87180370342942,10.853583917544135],[-74.83875161633357,10.88581012373821],[-74.73837120367212,10.875894367986186]]]}},{"type":"Feature","properties":{"municipio":"Manatí","codigo_dane":"08436","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.92321806113407,10.53380079454139],[-74.91709730426446,10.412332786579109],[-74.96239090509951,10.382585519323039],[-75.03339168478688,10.368951355164008],[-75.07378868012624,10.409853847641102],[-75.02727092791729,10.52016663038236],[-74.92321806113407,10.53380079454139]]]}},{"type":"Feature","properties":{"municipio":"Palmar De Varela","codigo_dane":"08520","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.72735384130684,10.749468482147893],[-74.72612968993292,10.72715803170584],[-74.74694026328956,10.651550394096665],[-74.83752746495965,10.686255539228746],[-74.72735384130684,10.749468482147893]]]}},{"type":"Feature","properties":{"municipio":"Piojó","codigo_dane":"08549","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-75.03828829028257,10.770539463120942],[-75.04563319852609,10.70112917285678],[-75.06277131776096,10.685016069759742],[-75.24761817522291,10.696171294980768],[-75.22435929911843,10.795328852501],[-75.21701439087491,10.805244608253023],[-75.14601361118754,10.811441955598037],[-75.03828829028257,10.770539463120942]]]}},{"type":"Feature","properties":{"municipio":"Polonuevo","codigo_dane":"08558","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.80814783198556,10.812681425067039],[-74.81182028610732,10.77797627993496],[-74.84976897869885,10.708565989670797],[-74.87547615755118,10.725918562236838],[-74.87914861167293,10.812681425067039],[-74.80814783198556,10.812681425067039]]]}},{"type":"Feature","properties":{"municipio":"Ponedera","codigo_dane":"08560","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.84976897869885,10.708565989670797],[-74.83752746495965,10.686255539228746],[-74.74694026328956,10.651550394096665],[-74.72612968993292,10.600732145867546],[-74.74449196054171,10.538758672417401],[-74.80692368061165,10.482982546312272],[-74.82038934572476,10.494137771533298],[-74.85588973556845,10.564787531266463],[-74.8411999190814,10.600732145867546],[-74.87547615755118,10.725918562236838],[-74.84976897869885,10.708565989670797]]]}},{"type":"Feature","properties":{"municipio":"Puerto Colombia","codigo_dane":"08573","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.91832145563838,10.945304658250349],[-74.98442562983007,10.983728211789439],[-74.92076975838623,11.045701685239582],[-74.87425200617726,11.048180624177588],[-74.87425200617726,10.987446620196447],[-74.91832145563838,10.945304658250349]]]}},{"type":"Feature","properties":{"municipio":"Repelón","codigo_dane":"08606","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-75.02727092791729,10.52016663038236],[-75.07378868012624,10.409853847641102],[-75.08970264798721,10.411093317110105],[-75.12887549195266,10.397459152951074],[-75.17661739553554,10.455714217994208],[-75.24149741835332,10.504053527285322],[-75.22558345049235,10.559829653390452],[-75.06032301501313,10.594534798522531],[-75.02727092791729,10.52016663038236]]]}},{"type":"Feature","properties":{"municipio":"Sabanagrande","codigo_dane":"08634","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.72490553855899,10.771778932589944],[-74.81182028610732,10.77797627993496],[-74.80814783198556,10.812681425067039],[-74.74081950641995,10.834991875509091],[-74.72490553855899,10.771778932589944]]]}},{"type":"Feature","properties":{"municipio":"Sabanalarga","codigo_dane":"08638","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.92321806113407,10.53380079454139],[-75.02727092791729,10.52016663038236],[-75.06032301501313,10.594534798522531],[-75.06277131776096,10.685016069759742],[-75.04563319852609,10.70112917285678],[-74.93301127212543,10.711044928608803],[-74.87547615755118,10.725918562236838],[-74.8411999190814,10.600732145867546],[-74.85588973556845,10.564787531266463],[-74.92321806113407,10.53380079454139]]]}},{"type":"Feature","properties":{"municipio":"Santa Lucía","codigo_dane":"08675","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.96239090509951,10.382585519323039],[-74.91709730426446,10.337964618438935],[-74.9379078776211,10.289625309147823],[-75.02359847379552,10.363993477287995],[-75.03339168478688,10.368951355164008],[-74.96239090509951,10.382585519323039]]]}},{"type":"Feature","properties":{"municipio":"Santo Tomás","codigo_dane":"08685","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.72490553855899,10.771778932589944],[-74.72735384130684,10.749468482147893],[-74.83752746495965,10.686255539228746],[-74.84976897869885,10.708565989670797],[-74.81182028610732,10.77797627993496],[-74.72490553855899,10.771778932589944]]]}},{"type":"Feature","properties":{"municipio":"Soledad","codigo_dane":"08758","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.75673347428092,10.945304658250349],[-74.73837120367212,10.875894367986186],[-74.83875161633357,10.88581012373821],[-74.82651010259437,10.914317921525276],[-74.75673347428092,10.945304658250349]]]}},{"type":"Feature","properties":{"municipio":"Suan","codigo_dane":"08770","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.86813124930765,10.34044355737694],[-74.91097654739487,10.253680694546738],[-74.9379078776211,10.289625309147823],[-74.91709730426446,10.337964618438935],[-74.86813124930765,10.34044355737694]]]}},{"type":"Feature","properties":{"municipio":"Tubará","codigo_dane":"08832","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.91832145563838,10.945304658250349],[-74.94525278586462,10.858541795420146],[-74.99421884082143,10.815160364005045],[-75.07378868012624,10.88581012373821],[-74.98442562983007,10.983728211789439],[-74.91832145563838,10.945304658250349]]]}},{"type":"Feature","properties":{"municipio":"Usiacurí","codigo_dane":"08849","departamento":"Atlántico"},"geometry":{"type":"Polygon","coordinates":[[[-74.93301127212543,10.711044928608803],[-75.04563319852609,10.70112917285678],[-75.03828829028257,10.770539463120942],[-74.98442562983007,10.790370974624988],[-74.93423542349935,10.770539463120942],[-74.93301127212543,10.711044928608803]]]}}]};
+
+// ───────── Normalización de nombres para emparejar datos con geografía ─────────
+function normalizar(nombre) {
+  return nombre
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+const DATOS_NORMALIZADOS = {};
+Object.keys(DATOS_MUNICIPIOS).forEach(key => {
+  DATOS_NORMALIZADOS[normalizar(key)] = DATOS_MUNICIPIOS[key];
+});
+
+function getDato(municipioGeo) {
+  return DATOS_NORMALIZADOS[normalizar(municipioGeo)] || null;
+}
+
+// ───────── Escala de color institucional ─────────
+function colorPorPorcentaje(pct) {
+  if (pct === null || pct === undefined) return '#ECE9F0';
+  if (pct < 20) return '#FCE9F1';
+  if (pct < 30) return '#F8C9DD';
+  if (pct < 40) return '#F391B9';
+  return '#C24B7E';
+}
+
+// ───────── Setup SVG ─────────
+const container = document.getElementById('mapa-svg-container');
+const width = container.clientWidth || 900;
+const height = Math.round(width * 0.78);
+
+const svg = d3.select('#mapa-svg-container')
+  .append('svg')
+  .attr('viewBox', `0 0 ${width} ${height}`)
+  .attr('width', '100%')
+  .attr('height', 'auto')
+  .style('display', 'block');
+
+const g = svg.append('g');
+
+const projection = d3.geoMercator().fitSize([width - 24, height - 24], GEO_DATA);
+const path = d3.geoPath().projection(projection);
+
+// translate group to add small padding
+g.attr('transform', 'translate(12,12)');
+
+const tooltip = d3.select('#tooltip');
+
+// ───────── Dibujar municipios ─────────
+const municipiosGroup = g.append('g').attr('class', 'municipios-layer');
+
+municipiosGroup.selectAll('path.municipio-path')
+  .data(GEO_DATA.features)
+  .enter()
+  .append('path')
+  .attr('class', d => {
+    const dato = getDato(d.properties.municipio);
+    return 'municipio-path' + (!dato || dato.pct === null ? ' municipio-sin-dato' : '');
+  })
+  .attr('d', path)
+  .attr('fill', d => {
+    const dato = getDato(d.properties.municipio);
+    return dato ? colorPorPorcentaje(dato.pct) : '#ECE9F0';
+  })
+  .on('mousemove', function(event, d) {
+    const dato = getDato(d.properties.municipio);
+    showTooltip(event, d.properties.municipio, dato);
+  })
+  .on('mouseleave', function() {
+    tooltip.classed('visible', false);
+  });
+
+// ───────── Estrellas para alcaldesas ─────────
+function starPath(cx, cy, r) {
+  const points = [];
+  const rInner = r * 0.42;
+  for (let i = 0; i < 10; i++) {
+    const radius = i % 2 === 0 ? r : rInner;
+    const angle = (Math.PI / 5) * i - Math.PI / 2;
+    points.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)]);
+  }
+  return 'M' + points.map(p => p.join(',')).join('L') + 'Z';
+}
+
+const starsGroup = g.append('g').attr('class', 'stars-layer');
+
+GEO_DATA.features.forEach(d => {
+  const dato = getDato(d.properties.municipio);
+  if (dato && dato.alcaldesa) {
+    const centroid = path.centroid(d);
+    if (!isNaN(centroid[0])) {
+      starsGroup.append('path')
+        .attr('class', 'star-icon')
+        .attr('d', starPath(centroid[0], centroid[1] - 9, 4.5))
+        .attr('fill', '#ffffff')
+        .attr('stroke', '#C24B7E')
+        .attr('stroke-width', 0.6);
+    }
+  }
+});
+
+// ───────── Etiquetas de municipios ─────────
+const labelsGroup = g.append('g').attr('class', 'labels-layer');
+
+labelsGroup.selectAll('text.muni-label')
+  .data(GEO_DATA.features)
+  .enter()
+  .append('text')
+  .attr('class', d => 'muni-label' + (d.properties.municipio === 'Barranquilla' ? ' muni-label-bquilla' : ''))
+  .attr('x', d => path.centroid(d)[0])
+  .attr('y', d => {
+    const dato = getDato(d.properties.municipio);
+    return path.centroid(d)[1] + (dato && dato.alcaldesa ? 6 : 2);
+  })
+  .text(d => d.properties.municipio)
+  .style('pointer-events', 'none');
+
+// ───────── Tooltip content ─────────
+function showTooltip(event, nombreMunicipio, dato) {
+  let html = '';
+
+  if (!dato || dato.pct === null) {
+    html = `
+      <div class="tooltip-title">${nombreMunicipio}</div>
+      <div class="tooltip-divider"></div>
+      <div class="tooltip-nodata">Dato no disponible para este municipio.</div>
+    `;
+  } else {
+    const estrella = dato.alcaldesa ? '<span class="tt-star">★</span>' : '';
+    html = `
+      <div class="tooltip-title">${estrella}${nombreMunicipio}</div>
+      <div class="tooltip-divider"></div>
+      <div class="tooltip-section-label">Representación política femenina</div>
+      <div class="tooltip-row">
+        <span>Mujeres en el Concejo Municipal</span>
+        <span class="val">${dato.pct}%</span>
+      </div>
+      ${dato.curules_m !== null ? `<div class="tooltip-row"><span>Curules</span><span class="val">${dato.curules_m} de ${dato.curules_t}</span></div>` : ''}
+      <div class="tooltip-divider"></div>
+      <div class="tooltip-section-label">Alcaldía</div>
+      <div class="tooltip-alcaldia">${dato.alcaldesa ? 'Alcaldesa' : 'Alcalde'}</div>
+      ${dato.alcaldesa ? '<div class="tooltip-leadership">Liderazgo femenino en la administración municipal.</div>' : ''}
+    `;
+  }
+
+  tooltip.html(html).classed('visible', true);
+
+  const wrapRect = document.querySelector('.map-wrap').getBoundingClientRect();
+  const tooltipNode = tooltip.node();
+  const tw = tooltipNode.offsetWidth || 220;
+  const th = tooltipNode.offsetHeight || 100;
+
+  let left = event.clientX - wrapRect.left + 16;
+  let top = event.clientY - wrapRect.top - th / 2;
+
+  if (left + tw > wrapRect.width - 8) {
+    left = event.clientX - wrapRect.left - tw - 16;
+  }
+  if (top < 8) top = 8;
+  if (top + th > wrapRect.height - 8) top = wrapRect.height - th - 8;
+
+  tooltip.style('left', left + 'px').style('top', top + 'px');
+}
+
+// ───────── Zoom y pan ─────────
+const zoomBehavior = d3.zoom()
+  .scaleExtent([1, 8])
+  .on('zoom', (event) => {
+    g.attr('transform', event.transform);
+  });
+
+svg.call(zoomBehavior);
+
+document.getElementById('zoom-in').addEventListener('click', () => {
+  svg.transition().duration(250).call(zoomBehavior.scaleBy, 1.4);
+});
+document.getElementById('zoom-out').addEventListener('click', () => {
+  svg.transition().duration(250).call(zoomBehavior.scaleBy, 0.7);
+});
+document.getElementById('zoom-reset').addEventListener('click', () => {
+  svg.transition().duration(350).call(zoomBehavior.transform, d3.zoomIdentity);
+});
+
+// ───────── Responsive redibujado ─────────
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    location.reload();
+  }, 400);
+});
+</script>
+
+</body>
+</html>
